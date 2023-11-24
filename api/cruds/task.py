@@ -1,3 +1,5 @@
+from sqlalchemy import select
+from sqlalchemy.engine import Result
 from sqlalchemy.orm import Session
 
 import api.models.task as task_model
@@ -12,3 +14,14 @@ def create_task(
     db.commit()
     db.refresh(task)
     return task
+
+
+def get_task_with_done(db: Session) -> list[tuple[int, str, bool]]:
+    result: Result = db.execute(
+        select(
+            task_model.Task.id,
+            task_model.Task.title,
+            task_model.Done.id.isnot(None).label("done"),
+        ).outerjoin(task_model.Done)
+    )
+    return result.all()
